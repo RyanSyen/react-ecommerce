@@ -1,8 +1,18 @@
 import { useForm } from "react-hook-form";
 import React, { useContext } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate, useNavigationType } from "react-router-dom";
 import { AuthContext } from "../../authentication/auth";
-import firebaseConfig from "../../firebaseConfig";
+import {signIn} from "../../firebase/config";
+import { update_signIn } from "../../firebase/users";
+import {
+  Form,
+  Label,
+  FormTitle,
+  Input,
+  SubmitBtn,
+  ErrMsg,
+} from "../auth.styles";
+import { getDateTime } from "../../helper";
 
 export default function Login() {
   const {
@@ -11,26 +21,33 @@ export default function Login() {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
+  const navigate = useNavigate();
+
+  const onSubmit = async (data) => {
     console.log(data);
-    try{
-      firebaseConfig.auth().signInWithEmailAndPassword(data.email, data.password);
-    } catch (err){
-      console.log(err);
+    try {
+      await signIn(data.email, data.password, getDateTime());
+      await update_signIn(data.email, getDateTime());
+      console.log("signed in action done 1");
+    } catch (err) {
+      console.log("sign in unsuccessful");
+      console.error(err.code, err.message);
     }
   };
 
-  const {currentUser} = useContext(AuthContext);
-  if(currentUser) {
-    console.log("next function -> navigate user to home page");
-    // return <Navigate to="/home" />
+  const { currentUser } = useContext(AuthContext);
+  if (currentUser) {
+    console.log("signed in action done 2");
+
+    navigate("/");
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <Form onSubmit={handleSubmit(onSubmit)}>
+      <FormTitle>Login</FormTitle>
       {/* email */}
-      <label htmlFor="Email">Email</label>
-      <input
+      <Label htmlFor="Email">Email</Label>
+      <Input
         name="email"
         type="email"
         placeholder="e.g. abc@gmail.com"
@@ -51,11 +68,13 @@ export default function Login() {
           },
         })}
       />
-      {errors?.email?.type && <p className="errMsg">{errors.email.message}</p>}
+      {errors?.email?.type && (
+        <ErrMsg className="errMsg">{errors.email.message}</ErrMsg>
+      )}
 
       {/* password  */}
-      <label htmlFor="Password">Password</label>
-      <input
+      <Label htmlFor="Password">Password</Label>
+      <Input
         name="password"
         type="password"
         placeholder="Password"
@@ -68,7 +87,7 @@ export default function Login() {
           {console.log(errors.password.message)}
           {Array.isArray(errors.password.message) ? (
             <>
-              <p className="errMsg">{errors.password.message[0]}</p>
+              <ErrMsg className="errMsg">{errors.password.message[0]}</ErrMsg>
               <ul>
                 {errors.password.message.map(
                   (msg, idx) => idx !== 0 && <li className="errMsg">{msg}</li>
@@ -76,11 +95,11 @@ export default function Login() {
               </ul>
             </>
           ) : (
-            <p className="errMsg">{errors.password.message}</p>
+            <ErrMsg className="errMsg">{errors.password.message}</ErrMsg>
           )}
         </>
       )}
-      <input name="login" type="submit" />
-    </form>
+      <SubmitBtn name="login" type="submit" />
+    </Form>
   );
 }

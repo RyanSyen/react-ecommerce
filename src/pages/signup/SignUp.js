@@ -1,11 +1,20 @@
 import { React, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Redirect } from "react-router-dom";
-import firebaseConfig from "../../firebaseConfig";
-import "./SignUp.styles.css";
+import { Redirect, useNavigate } from "react-router-dom";
+import { signUp } from "../../firebase/config";
+import { addUser } from "../../firebase/users";
+import {
+  Form,
+  Label,
+  FormTitle,
+  Input,
+  SubmitBtn,
+  ErrMsg,
+} from "../auth.styles";
+import { dblClick } from "@testing-library/user-event/dist/click";
 
 export default function SignUp() {
-  const [signUpDone, setsignUpDone] = useState(false);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -18,28 +27,24 @@ export default function SignUp() {
   const password = useRef({});
   password.current = watch("password", "");
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     console.log(data);
     try {
-      firebaseConfig
-        .auth()
-        .createUserWithEmailAndPassword(data.email, data.password);
-        setsignUpDone(true);
+      await signUp(data.email, data.password);
+      await addUser(data.username, data.email, data.phoneNumber);
+      navigate("/login");
     } catch (err) {
-      alert(err);
+      console.log("sign up unsuccessful");
+      console.error(err.code, err.message);
     }
   };
 
-  if(signUpDone){
-    console.log("next function -> navigate user to login page");
-    // return <Redirect to="/login" />;
-  }
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <Form onSubmit={handleSubmit(onSubmit)}>
+      <FormTitle>Sign Up</FormTitle>
       {/* username */}
-      <label htmlFor="username">Username</label>
-      <input
+      <Label htmlFor="username">Username</Label>
+      <Input
         name="username"
         type="text"
         placeholder="e.g. bob"
@@ -62,12 +67,12 @@ export default function SignUp() {
       />
       {/* display error msg */}
       {errors?.username?.type && (
-        <p className="errMsg">{errors.username.message}</p>
+        <ErrMsg className="errMsg">{errors.username.message}</ErrMsg>
       )}
 
       {/* email */}
-      <label htmlFor="Email">Email</label>
-      <input
+      <Label htmlFor="Email">Email</Label>
+      <Input
         name="email"
         type="email"
         placeholder="e.g. abc@gmail.com"
@@ -93,11 +98,13 @@ export default function SignUp() {
           //   }
         })}
       />
-      {errors?.email?.type && <p className="errMsg">{errors.email.message}</p>}
+      {errors?.email?.type && (
+        <ErrMsg className="errMsg">{errors.email.message}</ErrMsg>
+      )}
 
       {/* phone number */}
-      <label htmlFor="PhoneNumber">Phone Number</label>
-      <input
+      <Label htmlFor="PhoneNumber">Phone Number</Label>
+      <Input
         name="phone"
         type="phone"
         placeholder="012-23453674"
@@ -115,12 +122,12 @@ export default function SignUp() {
         })}
       />
       {errors?.phoneNumber?.type && (
-        <p className="errMsg">{errors.phoneNumber.message}</p>
+        <ErrMsg className="errMsg">{errors.phoneNumber.message}</ErrMsg>
       )}
 
       {/* password  */}
-      <label htmlFor="Password">Password</label>
-      <input
+      <Label htmlFor="Password">Password</Label>
+      <Input
         name="password"
         type="password"
         placeholder="Password"
@@ -145,7 +152,7 @@ export default function SignUp() {
           {console.log(errors.password.message)}
           {Array.isArray(errors.password.message) ? (
             <>
-              <p className="errMsg">{errors.password.message[0]}</p>
+              <ErrMsg className="errMsg">{errors.password.message[0]}</ErrMsg>
               <ul>
                 {errors.password.message.map(
                   (msg, idx) => idx !== 0 && <li className="errMsg">{msg}</li>
@@ -153,14 +160,14 @@ export default function SignUp() {
               </ul>
             </>
           ) : (
-            <p className="errMsg">{errors.password.message}</p>
+            <ErrMsg className="errMsg">{errors.password.message}</ErrMsg>
           )}
         </>
       )}
 
       {/* confirm password */}
-      <label htmlFor="Confirm Password">Confirm Password</label>
-      <input
+      <Label htmlFor="Confirm Password">Confirm Password</Label>
+      <Input
         name="confirm_password"
         type="password"
         placeholder="Confirm Password"
@@ -174,10 +181,10 @@ export default function SignUp() {
       />
 
       {errors?.ConfirmPassword?.type && (
-        <p className="errMsg">{errors.ConfirmPassword.message}</p>
+        <ErrMsg className="errMsg">{errors.ConfirmPassword.message}</ErrMsg>
       )}
 
-      <input type="submit" />
-    </form>
+      <SubmitBtn type="submit" />
+    </Form>
   );
 }

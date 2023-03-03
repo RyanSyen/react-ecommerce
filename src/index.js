@@ -1,6 +1,6 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import SignUp from "./pages/signup/SignUp";
 import Login from "./pages/login/Login";
@@ -8,16 +8,16 @@ import Home from "./pages/home/Home";
 import ErrorPage from "./pages/404";
 import { AuthContext, AuthProvider } from "./authentication/auth";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 
 const router = createBrowserRouter([
   {
     errorElement: <ErrorPage />,
-    children:[
+    children: [
       {
         path: "/",
         element: <Home />,
-        errorElement: <ErrorPage />
+        errorElement: <ErrorPage />,
       },
       {
         path: "/login",
@@ -27,14 +27,14 @@ const router = createBrowserRouter([
         path: "/signup",
         element: <SignUp />,
       },
-    ]
+    ],
   },
-  
 ]);
 
-
 root.render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>
+  // <React.StrictMode>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  // </React.StrictMode>
 );
